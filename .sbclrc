@@ -1,0 +1,49 @@
+; -*- mode: Lisp;-*-
+
+;;; The following lines added by ql:add-to-init-file:
+#-quicklisp
+(let ((quicklisp-init (merge-pathnames "quicklisp/setup.lisp"
+                                       (user-homedir-pathname))))
+  (when (probe-file quicklisp-init)
+    (load quicklisp-init)))
+
+;; system dependenceis
+;; (let ((sbcl-deps (merge-pathnames ".sbclrc.deps"
+;;                                        (user-homedir-pathname))))
+;;   (when (probe-file sbcl-deps)
+;;     (load sbcl-deps)))
+
+;; dependencies
+(ql:quickload :quickproject)
+(ql:quickload :unix-opts)
+
+;; aliases
+(defmacro alias (to fn)
+  `(setf (fdefinition ',to) #',fn))
+
+(alias pwd sb-posix:getcwd)
+(alias getenv sb-unix::posix-getenv)
+;; utilities
+(defun str (&rest elts)
+  (format nil "~{~a~}"
+          (mapcar (lambda (x)
+                    (cond ((numberp x) (write-to-string x))
+                          (t x)))
+                  elts)))
+(defun assoc-str (key alist)
+  "Access alists with string keys"
+  (assoc key alist :test 'equal))
+
+
+;; commands
+(defun new-project (project-name &rest deps)
+  (quickproject:make-project
+   (pathname (str "~/quicklisp/local-projects/" project-name))
+   :depends-on deps))
+
+
+;; hacks
+(defun zig-init ()
+  (push #p"/Users/vedwin/wrk/lab/zomg/zomgd/src/sre/zig/" asdf:*central-registry*))
+
+(declaim (sb-ext:muffle-conditions cl:warning))

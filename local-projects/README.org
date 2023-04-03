@@ -1,0 +1,3 @@
+* local-projects
+
++ shadow local projects so everything made from ~quickproject~ ends up here

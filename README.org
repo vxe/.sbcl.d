@@ -1,0 +1,24 @@
+* .sbcl.d - SBCL Environment Init
++ emulate .emacs.d
++ provides tracking of local projects
+
+  
+
+** Installation
+:PROPERTIES:
+:CUSTOM_ID: installation
+:END:
+
+#+begin_src sh
+git clone git@github.com:vxe/.sbcl.d.git ~/
+#+end_src
+
++ get dependencies
+#+begin_src
+cd ~/.sbcl.d
+make asdf
+#+end_src
+
+** Primary Usage
+** Additional Usage
+** Options
