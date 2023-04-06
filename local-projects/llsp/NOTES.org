@@ -1,0 +1,20 @@
+* Loving Common Lisp
++ org the Savvy Programmer's Secret Weapon
+
+
+#+begin_src lisp
+  (setf pizza "<html> werfwef </html>")
+
+  ;; (search pizza "wer")
+  (search "wer" pizza)
+#+end_src
+
+#+RESULTS:
+: 7
+
+
+** hashtable
+  #+begin_src lisp
+    (defun consh (ht k v)
+      (setf (gethash k ht) v))
+  #+end_src
