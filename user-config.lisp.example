@@ -1,0 +1,105 @@
+;;;; user-config.lisp - User Configuration
+;;;;
+;;;; This file is loaded before layers are initialized.
+;;;; Use it to customize your SBCL environment.
+;;;;
+;;;; To use this file, copy it to user-config.lisp:
+;;;;   cp user-config.lisp.example user-config.lisp
+
+(in-package #:sbcl-config)
+
+;;; ============================================================================
+;;; Layer Configuration
+;;; ============================================================================
+
+;; Customize which layers to load
+;; Available layers: :core, :dev, :project, :docs
+;; (setf *enabled-layers* '(:core :dev :project :docs))
+
+;; Or disable specific layers:
+;; (setf *enabled-layers* '(:core :project))
+
+;;; ============================================================================
+;;; Personal Settings
+;;; ============================================================================
+
+;; Example: Set a custom local projects directory
+;; (defvar *my-projects-dir*
+;;   (merge-pathnames "code/lisp/" (user-homedir-pathname)))
+
+;; Example: Add custom ASDF source registry
+;; (pushnew #p"/path/to/my/systems/" asdf:*central-registry*)
+
+;;; ============================================================================
+;;; Custom Functions
+;;; ============================================================================
+
+;; Example: Quick project switcher
+;; (defun myproj ()
+;;   "Switch to my main project."
+;;   (cd (merge-pathnames "code/my-project/" (user-homedir-pathname)))
+;;   (ql:quickload :my-project))
+
+;; Example: Custom initialization for a specific framework
+;; (defun setup-web ()
+;;   "Setup web development environment."
+;;   (ql:quickload '(:hunchentoot :cl-who :parenscript))
+;;   (format t "~&Web development environment ready.~%"))
+
+;;; ============================================================================
+;;; Quicklisp Systems to Auto-Load
+;;; ============================================================================
+
+;; Uncomment to auto-load systems at startup
+;; (ql:quickload '(:alexandria :split-sequence :cl-ppcre) :silent t)
+
+;;; ============================================================================
+;;; REPL Customization
+;;; ============================================================================
+
+;; Example: Custom REPL prompt
+;; (defun my-repl-prompt (stream)
+;;   (format stream "~&λ> "))
+;; (setf sb-int:*repl-prompt-fun* #'my-repl-prompt)
+
+;; Example: Set custom print settings
+;; (setf *print-pretty* t)
+;; (setf *print-case* :downcase)
+
+;;; ============================================================================
+;;; Development Settings
+;;; ============================================================================
+
+;; Example: Always enable certain optimizations
+;; (declaim (optimize (speed 0) (safety 3) (debug 3)))
+
+;; Example: Set up debugging
+;; (sb-ext:restrict-compiler-policy 'debug 3)
+
+;;; ============================================================================
+;;; Aliases and Shortcuts
+;;; ============================================================================
+
+;; Example: Create custom aliases (define these in CL-USER after layers load)
+;; (in-package #:cl-user)
+;; (defun l () (ls))
+;; (defun h () (help))
+
+;;; ============================================================================
+;;; Project-Specific Settings
+;;; ============================================================================
+
+;; Example: Register a specific project system
+;; (defun load-my-system ()
+;;   (push #p"~/code/my-system/" asdf:*central-registry*)
+;;   (asdf:load-system :my-system))
+
+;;; ============================================================================
+;;; Experimental Features
+;;; ============================================================================
+
+;; Example: Enable experimental SBCL features
+;; (require :sb-introspect)
+;; (require :sb-cltl2)
+
+(format t "~&; User configuration loaded.~%")

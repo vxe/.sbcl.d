@@ -1,49 +1,104 @@
 ; -*- mode: Lisp;-*-
+;;;; .sbclrc - SBCL Configuration System
+;;;; Inspired by Spacemacs - Modular, Extensible, Powerful
+;;;;
+;;;; This file implements a layer-based configuration system for SBCL.
+;;;; Layers are loaded from the layers/ directory and can be easily
+;;;; enabled/disabled in user-config.lisp
 
-;;; The following lines added by ql:add-to-init-file:
+;;; ============================================================================
+;;; Quicklisp Setup
+;;; ============================================================================
+
 #-quicklisp
 (let ((quicklisp-init (merge-pathnames "quicklisp/setup.lisp"
                                        (user-homedir-pathname))))
   (when (probe-file quicklisp-init)
     (load quicklisp-init)))
 
-;; system dependenceis
-;; (let ((sbcl-deps (merge-pathnames ".sbclrc.deps"
-;;                                        (user-homedir-pathname))))
-;;   (when (probe-file sbcl-deps)
-;;     (load sbcl-deps)))
+;;; ============================================================================
+;;; Configuration System
+;;; ============================================================================
 
-;; dependencies
-(ql:quickload :quickproject)
-(ql:quickload :unix-opts)
+(defpackage #:sbcl-config
+  (:use #:cl)
+  (:export #:*sbcl-config-dir*
+           #:*enabled-layers*
+           #:load-layer
+           #:load-layers
+           #:reload-config
+           #:layer-path))
 
-;; aliases
-(defmacro alias (to fn)
-  `(setf (fdefinition ',to) #',fn))
+(in-package #:sbcl-config)
 
-(alias pwd sb-posix:getcwd)
-(alias getenv sb-unix::posix-getenv)
-;; utilities
-(defun str (&rest elts)
-  (format nil "~{~a~}"
-          (mapcar (lambda (x)
-                    (cond ((numberp x) (write-to-string x))
-                          (t x)))
-                  elts)))
-(defun assoc-str (key alist)
-  "Access alists with string keys"
-  (assoc key alist :test 'equal))
+(defvar *sbcl-config-dir*
+  (merge-pathnames ".sbcl.d/" (user-homedir-pathname))
+  "Root directory for SBCL configuration files.")
 
+(defvar *enabled-layers* '(:core :dev :project :docs)
+  "List of layers to load. Set this in user-config.lisp before loading.")
 
-;; commands
-(defun new-project (project-name &rest deps)
-  (quickproject:make-project
-   (pathname (str "~/quicklisp/local-projects/" project-name))
-   :depends-on deps))
+(defvar *loaded-layers* nil
+  "List of currently loaded layers.")
 
+(defun layer-path (layer-name)
+  "Get the full path to a layer file."
+  (merge-pathnames
+   (format nil "layers/~(~a~).lisp" layer-name)
+   *sbcl-config-dir*))
 
-;; hacks
-(defun zig-init ()
-  (push #p"/Users/vedwin/wrk/lab/zomg/zomgd/src/sre/zig/" asdf:*central-registry*))
+(defun load-layer (layer-name)
+  "Load a configuration layer by name."
+  (let ((layer-file (layer-path layer-name)))
+    (if (probe-file layer-file)
+        (progn
+          (format t "~&; Loading layer: ~a~%" layer-name)
+          (load layer-file)
+          (pushnew layer-name *loaded-layers*)
+          t)
+        (progn
+          (format t "~&; Warning: Layer ~a not found at ~a~%"
+                  layer-name layer-file)
+          nil))))
 
-(declaim (sb-ext:muffle-conditions cl:warning))
+(defun load-layers ()
+  "Load all enabled layers."
+  (setf *loaded-layers* nil)
+  (dolist (layer *enabled-layers*)
+    (load-layer layer)))
+
+(defun reload-config ()
+  "Reload the entire SBCL configuration."
+  (let ((sbclrc (merge-pathnames ".sbclrc" *sbcl-config-dir*)))
+    (when (probe-file sbclrc)
+      (load sbclrc)
+      (format t "~&; Configuration reloaded successfully.~%")
+      t)))
+
+;;; ============================================================================
+;;; User Configuration
+;;; ============================================================================
+
+;; Load user configuration if it exists (must come before layers)
+(let ((user-config (merge-pathnames "user-config.lisp" *sbcl-config-dir*)))
+  (when (probe-file user-config)
+    (format t "~&; Loading user configuration...~%")
+    (load user-config)))
+
+;;; ============================================================================
+;;; Load Layers
+;;; ============================================================================
+
+(format t "~&; ======================================~%")
+(format t "; SBCL Configuration System~%")
+(format t "; ======================================~%")
+
+(load-layers)
+
+(format t "~&; ======================================~%")
+(format t "; Loaded layers: ~{~a~^, ~}~%" *loaded-layers*)
+(format t "; Type (help) for available commands~%")
+(format t "; ======================================~%~%")
+
+;; Return to CL-USER package for REPL
+(in-package #:cl-user)
