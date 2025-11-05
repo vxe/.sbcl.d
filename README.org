@@ -1,24 +1,459 @@
-* .sbcl.d - SBCL Environment Init
-+ emulate .emacs.d
-+ provides tracking of local projects
+#+TITLE: .sbcl.d - Advanced SBCL Configuration System
+#+AUTHOR: Your Name
+#+DATE: 2024
 
-  
+* Overview
 
-** Installation
-:PROPERTIES:
-:CUSTOM_ID: installation
-:END:
+=.sbcl.d= is a modular, extensible SBCL configuration system inspired by Spacemacs. It provides a layer-based approach to configuring SBCL, making it easy to organize, extend, and maintain your Common Lisp development environment.
+
+** Features
+
+- 🎯 *Modular Layer System* - Organize configuration into logical, reusable layers
+- 🚀 *Rich REPL Experience* - Enhanced REPL with utilities, history, and helpers
+- 🔧 *Development Tools* - Profiling, debugging, code inspection, and analysis
+- 📦 *Project Management* - Seamless Quicklisp integration and project scaffolding
+- 📚 *Comprehensive Help* - Built-in documentation and learning utilities
+- ⚙️  *Easy Customization* - Simple user configuration without modifying core files
+- 🎨 *Spacemacs-Inspired* - Familiar concepts for Emacs users
+
+* Installation
+
+** Quick Install
+
+Clone the repository:
 
 #+begin_src sh
-git clone git@github.com:vxe/.sbcl.d.git ~/
-#+end_src
-
-+ get dependencies
-#+begin_src
+git clone <repository-url> ~/.sbcl.d
 cd ~/.sbcl.d
-make asdf
+make init
 #+end_src
 
-** Primary Usage
-** Additional Usage
-** Options
+This will:
+1. Backup your existing =~/.sbclrc= (if it exists)
+2. Create a symlink to =~/.sbcl.d/.sbclrc=
+3. Set up the =local-projects= directory
+
+** Manual Install
+
+#+begin_src sh
+git clone <repository-url> ~/.sbcl.d
+ln -sf ~/.sbcl.d/.sbclrc ~/.sbclrc
+#+end_src
+
+** Dependencies
+
+- SBCL (Steel Bank Common Lisp)
+- Quicklisp (installed at =~/quicklisp/=)
+
+* Configuration Structure
+
+#+begin_example
+~/.sbcl.d/
+├── .sbclrc                    # Main configuration file
+├── user-config.lisp          # Your personal configuration (optional)
+├── user-config.lisp.example  # Template for user config
+├── layers/                   # Configuration layers
+│   ├── core.lisp            # Core utilities and REPL enhancements
+│   ├── dev.lisp             # Development and debugging tools
+│   ├── project.lisp         # Project management
+│   └── docs.lisp            # Documentation and help system
+├── local-projects/          # Your Quicklisp local projects
+└── README.org               # This file
+#+end_example
+
+* Layers
+
+The configuration system is organized into four main layers:
+
+** Core Layer (=:core=)
+
+Essential utilities and REPL enhancements.
+
+*** Features:
+- String and collection utilities (=str=, =join=, =split=)
+- File system operations (=pwd=, =cd=, =ls=, =mkdir=)
+- System utilities (=getenv=, =setenv=, =shell=)
+- Timing and benchmarking (=benchmark=, =with-timing=)
+- Pretty printing (=pp=, =pph=)
+- REPL history
+- Package and symbol inspection
+- Common aliases
+
+*** Example Usage:
+#+begin_src lisp
+;; String operations
+(str "Hello" " " "World" "!" 123)  ; => "Hello World!123"
+
+;; File operations
+(pwd)                    ; Print working directory
+(cd "/tmp")             ; Change directory
+(ls)                    ; List files
+
+;; Benchmarking
+(benchmark (:times 1000)
+  (+ 1 2 3))
+
+;; Package inspection
+(packages)              ; List all packages
+(exports :cl)           ; List exported symbols
+#+end_src
+
+** Development Layer (=:dev=)
+
+Debugging, profiling, and code inspection tools.
+
+*** Features:
+- Object inspection (=inspect-object=, =what-is=)
+- Code navigation (=source=, =who-calls=, =who-references=)
+- Profiling tools (=profile-function=, =profile-report=)
+- Memory management (=memory-info=, =gc=)
+- Debug mode (=debug-on=, =debug-off=)
+- Testing helpers (=assert-equal=, =test-group=)
+- Code quality checks (=check-style=)
+
+*** Example Usage:
+#+begin_src lisp
+;; Inspect a symbol
+(what-is 'mapcar)
+
+;; Find who calls a function
+(who-calls 'my-function)
+
+;; Profile code
+(profile-function 'expensive-function)
+(expensive-function)
+(profile-report)
+(unprofile-all)
+
+;; Memory information
+(memory-info)
+(gc)
+
+;; Simple testing
+(test-group "Math tests"
+  (assert-equal 4 (+ 2 2) "Addition")
+  (assert-true (> 5 3) "Comparison"))
+#+end_src
+
+** Project Layer (=:project=)
+
+Project creation, management, and Quicklisp integration.
+
+*** Features:
+- Project creation (=new-project=, =scaffold-project=)
+- Project management (=local-projects=, =open-project=)
+- ASDF system utilities (=systems=, =system-info=)
+- Quicklisp helpers (=ql=, =qls=, =update-quicklisp=)
+- Workspace management (=save-workspace=, =load-workspace=)
+
+*** Example Usage:
+#+begin_src lisp
+;; Create a new project
+(new-project "my-app" :alexandria :cl-ppcre)
+
+;; Create a fully scaffolded project
+(scaffold-project "web-app"
+  :author "Your Name"
+  :license "MIT")
+
+;; Quick load a system
+(ql :hunchentoot)
+
+;; Search Quicklisp
+(qls "http")
+
+;; List local projects
+(local-projects)
+
+;; Open and load a project
+(open-project "my-app")
+
+;; Workspace management
+(save-workspace "web-dev")
+(load-workspace "web-dev")
+#+end_src
+
+** Documentation Layer (=:docs=)
+
+Help system, documentation search, and learning utilities.
+
+*** Features:
+- Comprehensive help system (=help=)
+- Enhanced documentation (=doc=, =search-doc=)
+- Improved apropos (=apropos-full=)
+- Example system (=examples=, =add-example=)
+- Quick reference (=quickref=)
+
+*** Example Usage:
+#+begin_src lisp
+;; Get help
+(help)                      ; Show overview
+(help :layers)             ; Help on specific topic
+
+;; Documentation
+(doc 'mapcar)              ; Show documentation
+(search-doc "iterate")     ; Search documentation
+
+;; Enhanced apropos
+(apropos-full "map")       ; Categorized search results
+
+;; Quick reference
+(quickref)                 ; Show categories
+(quickref :lists)         ; List operations reference
+#+end_src
+
+* User Configuration
+
+Create a =user-config.lisp= file to customize your environment:
+
+#+begin_src sh
+cp user-config.lisp.example user-config.lisp
+#+end_src
+
+** Enable/Disable Layers
+
+#+begin_src lisp
+(in-package #:sbcl-config)
+
+;; Load only specific layers
+(setf *enabled-layers* '(:core :project))
+
+;; Or load all layers (default)
+(setf *enabled-layers* '(:core :dev :project :docs))
+#+end_src
+
+** Add Custom Functions
+
+#+begin_src lisp
+;; Quick project switcher
+(defun myproj ()
+  "Switch to my main project."
+  (cd "~/code/my-project/")
+  (ql :my-project))
+
+;; Setup development environment
+(defun setup-web ()
+  "Load web development systems."
+  (ql '(:hunchentoot :cl-who :parenscript))
+  (format t "~&Web environment ready.~%"))
+#+end_src
+
+** Auto-load Systems
+
+#+begin_src lisp
+;; Load commonly used libraries at startup
+(ql:quickload '(:alexandria :split-sequence :cl-ppcre) :silent t)
+#+end_src
+
+* Quick Command Reference
+
+** Core Commands
+| Command            | Description                    |
+|--------------------+--------------------------------|
+| =(help)=           | Show help system               |
+| =(pwd)=            | Print working directory        |
+| =(cd path)=        | Change directory               |
+| =(ls [path])=      | List directory contents        |
+| =(shell cmd)=      | Execute shell command          |
+| =(pp obj)=         | Pretty print object            |
+| =(history [n])=    | Show REPL history              |
+
+** Project Commands
+| Command                    | Description                |
+|----------------------------+----------------------------|
+| =(new-project name)=       | Create new project         |
+| =(scaffold-project name)=  | Create scaffolded project  |
+| =(local-projects)=         | List local projects        |
+| =(open-project name)=      | Open and load project      |
+| =(ql system)=              | Quick load system          |
+| =(qls term)=               | Search Quicklisp           |
+
+** Development Commands
+| Command                | Description                 |
+|------------------------+-----------------------------|
+| =(what-is symbol)=     | Show symbol information     |
+| =(source symbol)=      | Find source location        |
+| =(who-calls fn)=       | Find function callers       |
+| =(profile-function fn)=| Profile a function          |
+| =(memory-info)=        | Show memory information     |
+| =(debug-on)=           | Enable debug mode           |
+
+** Documentation Commands
+| Command              | Description                    |
+|----------------------+--------------------------------|
+| =(doc symbol)=       | Show documentation             |
+| =(search-doc term)=  | Search documentation           |
+| =(apropos-full term)=| Enhanced apropos               |
+| =(quickref :topic)=  | Show quick reference           |
+
+* Advanced Usage
+
+** Creating Custom Layers
+
+Create a new file in =layers/= directory:
+
+#+begin_src lisp
+;;;; my-layer.lisp - Custom Layer
+
+(in-package #:cl-user)
+
+(defun my-function ()
+  "My custom function."
+  (format t "Hello from custom layer!~%"))
+
+(format t "~&; Custom layer loaded.~%")
+#+end_src
+
+Enable it in =user-config.lisp=:
+
+#+begin_src lisp
+(in-package #:sbcl-config)
+(push :my-layer *enabled-layers*)
+#+end_src
+
+** Reloading Configuration
+
+#+begin_src lisp
+;; Reload entire configuration
+(sbcl-config:reload-config)
+
+;; Load a specific layer
+(sbcl-config:load-layer :dev)
+#+end_src
+
+** Profiling Example
+
+#+begin_src lisp
+;; Profile a function
+(defun fibonacci (n)
+  (if (<= n 1)
+      n
+      (+ (fibonacci (- n 1))
+         (fibonacci (- n 2)))))
+
+(profile-function 'fibonacci)
+(fibonacci 25)
+(profile-report)
+(unprofile-all)
+#+end_src
+
+** Workspace Workflow
+
+#+begin_src lisp
+;; Set up a workspace
+(cd "~/code/my-project/")
+(ql :my-project)
+(ql :prove)
+(save-workspace "myproj")
+
+;; Later, restore it
+(load-workspace "myproj")
+#+end_src
+
+* Tips and Tricks
+
+** Better REPL Experience
+
+#+begin_src lisp
+;; Use history
+(history 50)  ; Show last 50 commands
+
+;; Pretty print complex structures
+(pp my-complex-list)
+(pph my-hash-table)
+
+;; Time your code
+(with-timing
+  (loop for i from 1 to 1000000 sum i))
+#+end_src
+
+** Package Exploration
+
+#+begin_src lisp
+;; List all packages
+(packages)
+
+;; See what a package exports
+(exports :alexandria)
+
+;; Find all functions in a package
+(functions :cl-user)
+
+;; Search for symbols
+(apropos-full "sequence")
+#+end_src
+
+** Project Development
+
+#+begin_src lisp
+;; Create a new project with dependencies
+(scaffold-project "web-app" :author "Your Name")
+
+;; Load and work on it
+(open-project "web-app")
+
+;; Run tests
+(test-system :web-app)
+#+end_src
+
+* Troubleshooting
+
+** Configuration not loading
+
+Check that =~/.sbclrc= points to =~/.sbcl.d/.sbclrc=:
+
+#+begin_src sh
+ls -la ~/.sbclrc
+#+end_src
+
+** Quicklisp not found
+
+Ensure Quicklisp is installed at =~/quicklisp/=:
+
+#+begin_src sh
+ls ~/quicklisp/setup.lisp
+#+end_src
+
+** Layer not loading
+
+Check layer exists and has no syntax errors:
+
+#+begin_src sh
+sbcl --script ~/.sbcl.d/layers/core.lisp
+#+end_src
+
+* Contributing
+
+Contributions are welcome! Please:
+
+1. Fork the repository
+2. Create a feature branch
+3. Add your enhancements
+4. Submit a pull request
+
+** Ideas for Contributions
+
+- Additional layers (git integration, testing frameworks, etc.)
+- More utility functions
+- Documentation improvements
+- Bug fixes
+
+* License
+
+This project is licensed under the MIT License.
+
+* Acknowledgments
+
+Inspired by:
+- Spacemacs - The modular Emacs configuration
+- Quicklisp - Common Lisp library manager
+- The Common Lisp community
+
+* Support
+
+For issues, questions, or suggestions:
+- Open an issue on GitHub
+- Check the documentation with =(help)=
+- Explore examples with =(examples symbol)=
+
+Happy Lisping! 🎨
