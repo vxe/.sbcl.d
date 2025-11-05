@@ -40,10 +40,75 @@ git clone <repository-url> ~/.sbcl.d
 ln -sf ~/.sbcl.d/.sbclrc ~/.sbclrc
 #+end_src
 
-** Dependencies
+** Verify Installation
 
-- SBCL (Steel Bank Common Lisp)
-- Quicklisp (installed at =~/quicklisp/=)
+Start SBCL and you should see:
+
+#+begin_example
+; ======================================
+; SBCL Configuration System
+; ======================================
+; Loading layer: CORE
+; Core layer loaded.
+; Loading layer: DEV
+; Development layer loaded.
+; Loading layer: PROJECT
+; Project management layer loaded.
+; Loading layer: DOCS
+; Documentation layer loaded.
+; ======================================
+; Loaded layers: DOCS, PROJECT, DEV, CORE
+; Type (help) for available commands
+; ======================================
+
+*
+#+end_example
+
+* Getting Started
+
+** First Steps
+
+After installation, try these commands:
+
+#+begin_src lisp
+;; 1. Get help
+(help)
+
+;; 2. See what layers are loaded
+sbcl-config:*loaded-layers*
+
+;; 3. Try some basic utilities
+(pwd)                    ; Where am I?
+(ls)                     ; What's in this directory?
+(packages)               ; What packages are available?
+
+;; 4. Pretty print something
+(pp '(1 2 3 (4 5 (6 7))))
+
+;; 5. Get documentation for a function
+(doc 'mapcar)
+
+;; 6. Search for functions
+(apropos-full "map")
+#+end_src
+
+** Your First Project
+
+Let's create a simple project:
+
+#+begin_src lisp
+;; 1. Create a scaffolded project
+(scaffold-project "hello-world" :author "Your Name")
+
+;; 2. Open it
+(open-project "hello-world")
+
+;; 3. You're now in the project directory, edit files, then:
+(ql :hello-world)        ; Load it
+
+;; 4. Run the main function
+(hello-world:main)
+#+end_src
 
 * Configuration Structure
 
@@ -83,19 +148,27 @@ Essential utilities and REPL enhancements.
 #+begin_src lisp
 ;; String operations
 (str "Hello" " " "World" "!" 123)  ; => "Hello World!123"
+(join ", " '("apple" "banana" "cherry"))  ; => "apple, banana, cherry"
+(split "one,two,three" #\,)  ; => ("one" "two" "three")
 
 ;; File operations
 (pwd)                    ; Print working directory
 (cd "/tmp")             ; Change directory
 (ls)                    ; List files
+(mkdir "/tmp/test")     ; Create directory
 
 ;; Benchmarking
 (benchmark (:times 1000)
   (+ 1 2 3))
 
+;; Timing a single operation
+(with-timing
+  (sleep 1))
+
 ;; Package inspection
 (packages)              ; List all packages
-(exports :cl)           ; List exported symbols
+(exports :cl)           ; List exported symbols from CL
+(functions :cl-user)    ; List all functions in CL-USER
 #+end_src
 
 ** Development Layer (=:dev=)
@@ -113,7 +186,7 @@ Debugging, profiling, and code inspection tools.
 
 *** Example Usage:
 #+begin_src lisp
-;; Inspect a symbol
+;; Inspect a symbol - see EVERYTHING about it
 (what-is 'mapcar)
 
 ;; Find who calls a function
@@ -127,11 +200,16 @@ Debugging, profiling, and code inspection tools.
 
 ;; Memory information
 (memory-info)
-(gc)
+(gc)  ; Force garbage collection and show stats
+
+;; Debug mode (unlimited print depth/length)
+(debug-on)
+(debug-off)
 
 ;; Simple testing
 (test-group "Math tests"
   (assert-equal 4 (+ 2 2) "Addition")
+  (assert-equal 10 (* 5 2) "Multiplication")
   (assert-true (> 5 3) "Comparison"))
 #+end_src
 
@@ -148,10 +226,10 @@ Project creation, management, and Quicklisp integration.
 
 *** Example Usage:
 #+begin_src lisp
-;; Create a new project
+;; Create a new project with dependencies
 (new-project "my-app" :alexandria :cl-ppcre)
 
-;; Create a fully scaffolded project
+;; Create a fully scaffolded project (better!)
 (scaffold-project "web-app"
   :author "Your Name"
   :license "MIT")
@@ -168,8 +246,13 @@ Project creation, management, and Quicklisp integration.
 ;; Open and load a project
 (open-project "my-app")
 
-;; Workspace management
+;; Get info about a system
+(system-info :alexandria)
+
+;; Workspace management - save your current state
 (save-workspace "web-dev")
+
+;; Later, restore everything
 (load-workspace "web-dev")
 #+end_src
 
@@ -188,18 +271,149 @@ Help system, documentation search, and learning utilities.
 #+begin_src lisp
 ;; Get help
 (help)                      ; Show overview
-(help :layers)             ; Help on specific topic
+(help :layers)             ; Help on layers system
+(help :config)             ; Help on configuration
+(help :quicklisp)          ; Help on Quicklisp
+(help :profiling)          ; Help on profiling
 
 ;; Documentation
-(doc 'mapcar)              ; Show documentation
-(search-doc "iterate")     ; Search documentation
+(doc 'mapcar)              ; Show all documentation
+(search-doc "iterate")     ; Search in documentation
 
-;; Enhanced apropos
-(apropos-full "map")       ; Categorized search results
+;; Enhanced apropos - categorized by type
+(apropos-full "map")       ; Shows functions, macros, variables separately
 
-;; Quick reference
+;; Quick reference for Common Lisp
 (quickref)                 ; Show categories
-(quickref :lists)         ; List operations reference
+(quickref :lists)          ; List operations
+(quickref :strings)        ; String operations
+(quickref :hash)           ; Hash table operations
+
+;; Examples (you can add your own!)
+(examples 'mapcar)
+(add-example 'my-function "(my-function 1 2 3) => 6")
+#+end_src
+
+* Common Workflows
+
+** Workflow 1: Starting a New Web Application
+
+#+begin_src lisp
+;; 1. Create the project
+(scaffold-project "my-webapp"
+  :author "Your Name"
+  :license "MIT")
+
+;; 2. Open it
+(open-project "my-webapp")
+
+;; 3. Add web dependencies by editing my-webapp.asd
+;; Then load everything
+(ql '(:hunchentoot :cl-who :parenscript))
+
+;; 4. Save this workspace for later
+(save-workspace "webapp-dev")
+
+;; Next time, just do:
+(load-workspace "webapp-dev")
+#+end_src
+
+** Workflow 2: Exploring a New Library
+
+#+begin_src lisp
+;; 1. Search for it
+(qls "json")
+
+;; 2. Load it
+(ql :cl-json)
+
+;; 3. See what it exports
+(exports :json)
+
+;; 4. Get help on specific functions
+(doc 'json:encode-json)
+(apropos-full "json")
+
+;; 5. Add examples as you learn
+(add-example 'json:encode-json
+  "(json:encode-json '((name . \"John\") (age . 30)) stream)")
+#+end_src
+
+** Workflow 3: Debugging Performance Issues
+
+#+begin_src lisp
+;; 1. Enable debug mode for more info
+(debug-on)
+
+;; 2. Check initial memory
+(memory-info)
+
+;; 3. Profile the slow function
+(profile-function 'slow-function)
+(profile-function 'helper-function-1)
+(profile-function 'helper-function-2)
+
+;; 4. Run your code
+(slow-function big-data)
+
+;; 5. See the report
+(profile-report)
+
+;; 6. Clean up
+(unprofile-all)
+(gc)
+(memory-info)  ; Compare with before
+#+end_src
+
+** Workflow 4: Daily Development Session
+
+#+begin_src lisp
+;; Start SBCL, then:
+
+;; 1. Load your workspace
+(load-workspace "current-project")
+
+;; 2. Check history from yesterday
+(history 10)
+
+;; 3. Load your project
+(ql :my-project)
+
+;; 4. Run tests
+(test-system :my-project)
+
+;; 5. Make changes, reload
+(reload)
+
+;; 6. Try specific functions
+(my-project:some-function test-data)
+
+;; 7. If something breaks, investigate
+(what-is 'my-project:broken-function)
+(source 'my-project:broken-function)
+(who-calls 'my-project:broken-function)
+#+end_src
+
+** Workflow 5: Code Review and Quality Check
+
+#+begin_src lisp
+;; 1. Load the package
+(ql :my-package)
+
+;; 2. Check style
+(check-style :my-package)
+
+;; 3. Review functions
+(functions :my-package)
+
+;; 4. Check which are documented
+(dolist (fn (functions :my-package))
+  (unless (documentation fn 'function)
+    (format t "Undocumented: ~a~%" fn)))
+
+;; 5. See what calls what
+(who-calls 'my-important-function)
+(who-references 'my-variable)
 #+end_src
 
 * User Configuration
@@ -210,59 +424,109 @@ Create a =user-config.lisp= file to customize your environment:
 cp user-config.lisp.example user-config.lisp
 #+end_src
 
-** Enable/Disable Layers
+** Example 1: Minimal Configuration
 
 #+begin_src lisp
+;;;; user-config.lisp
+
 (in-package #:sbcl-config)
 
-;; Load only specific layers
+;; Only load layers I need
 (setf *enabled-layers* '(:core :project))
-
-;; Or load all layers (default)
-(setf *enabled-layers* '(:core :dev :project :docs))
 #+end_src
 
-** Add Custom Functions
+** Example 2: Custom Project Directory
 
 #+begin_src lisp
-;; Quick project switcher
-(defun myproj ()
-  "Switch to my main project."
-  (cd "~/code/my-project/")
-  (ql :my-project))
+;;;; user-config.lisp
 
-;; Setup development environment
+(in-package #:sbcl-config)
+
+;; Custom project directory
+(defvar *my-projects* (merge-pathnames "code/lisp/"
+                                        (user-homedir-pathname)))
+
+;; Quick switcher
+(defun myprojects ()
+  (cd *my-projects*)
+  (format t "~&Projects:~%")
+  (ls))
+#+end_src
+
+** Example 3: Auto-load Common Libraries
+
+#+begin_src lisp
+;;;; user-config.lisp
+
+(in-package #:sbcl-config)
+
+;; After layers load, switch back to CL-USER
+(in-package #:cl-user)
+
+;; Auto-load common libraries
+(format t "~&; Loading common libraries...~%")
+(ql:quickload '(:alexandria
+                :split-sequence
+                :cl-ppcre
+                :local-time)
+              :silent t)
+
+(format t "~&; Common libraries ready.~%")
+#+end_src
+
+** Example 4: Development Environment Setup
+
+#+begin_src lisp
+;;;; user-config.lisp
+
+(in-package #:cl-user)
+
+;; Web development setup
 (defun setup-web ()
-  "Load web development systems."
-  (ql '(:hunchentoot :cl-who :parenscript))
-  (format t "~&Web environment ready.~%"))
-#+end_src
+  "Setup web development environment"
+  (ql '(:hunchentoot :cl-who :parenscript :cl-css))
+  (cd "~/code/web-projects/")
+  (format t "~&Web dev environment ready!~%"))
 
-** Auto-load Systems
+;; Data science setup
+(defun setup-data ()
+  "Setup data science environment"
+  (ql '(:vgplot :cl-csv :cl-json :dexador))
+  (format t "~&Data science environment ready!~%"))
 
-#+begin_src lisp
-;; Load commonly used libraries at startup
-(ql:quickload '(:alexandria :split-sequence :cl-ppcre) :silent t)
+;; Game development setup
+(defun setup-game ()
+  "Setup game development environment"
+  (ql '(:sdl2 :cl-opengl))
+  (format t "~&Game dev environment ready!~%"))
 #+end_src
 
 * Quick Command Reference
 
-** Core Commands
+** Essential Commands
 | Command            | Description                    |
 |--------------------+--------------------------------|
 | =(help)=           | Show help system               |
+| =(help :topic)=    | Help on specific topic         |
 | =(pwd)=            | Print working directory        |
 | =(cd path)=        | Change directory               |
 | =(ls [path])=      | List directory contents        |
-| =(shell cmd)=      | Execute shell command          |
-| =(pp obj)=         | Pretty print object            |
-| =(history [n])=    | Show REPL history              |
+| =(quit)= / =(exit)= | Exit SBCL                     |
+
+** Documentation Commands
+| Command              | Description                    |
+|----------------------+--------------------------------|
+| =(doc symbol)=       | Show documentation             |
+| =(what-is symbol)=   | Complete symbol information    |
+| =(search-doc term)=  | Search documentation           |
+| =(apropos-full term)=| Enhanced apropos               |
+| =(quickref :topic)=  | Show quick reference           |
 
 ** Project Commands
 | Command                    | Description                |
 |----------------------------+----------------------------|
-| =(new-project name)=       | Create new project         |
-| =(scaffold-project name)=  | Create scaffolded project  |
+| =(scaffold-project name)=  | Create full project        |
+| =(new-project name deps)=  | Create simple project      |
 | =(local-projects)=         | List local projects        |
 | =(open-project name)=      | Open and load project      |
 | =(ql system)=              | Quick load system          |
@@ -271,129 +535,190 @@ cp user-config.lisp.example user-config.lisp
 ** Development Commands
 | Command                | Description                 |
 |------------------------+-----------------------------|
-| =(what-is symbol)=     | Show symbol information     |
-| =(source symbol)=      | Find source location        |
-| =(who-calls fn)=       | Find function callers       |
 | =(profile-function fn)=| Profile a function          |
+| =(profile-report)=     | Show profiling results      |
 | =(memory-info)=        | Show memory information     |
-| =(debug-on)=           | Enable debug mode           |
+| =(gc)=                 | Force garbage collection    |
+| =(debug-on)= / =(debug-off)= | Toggle debug mode   |
+| =(who-calls fn)=       | Find function callers       |
+| =(source symbol)=      | Find source location        |
 
-** Documentation Commands
-| Command              | Description                    |
-|----------------------+--------------------------------|
-| =(doc symbol)=       | Show documentation             |
-| =(search-doc term)=  | Search documentation           |
-| =(apropos-full term)=| Enhanced apropos               |
-| =(quickref :topic)=  | Show quick reference           |
+** REPL Enhancement Commands
+| Command           | Description                     |
+|-------------------+---------------------------------|
+| =(pp obj)=        | Pretty print object             |
+| =(pph hash)=      | Pretty print hash table         |
+| =(history [n])=   | Show REPL history               |
+| =(packages)=      | List all packages               |
+| =(exports pkg)=   | List exported symbols           |
+| =(functions pkg)= | List functions in package       |
+
+** Workspace Commands
+| Command                  | Description                  |
+|--------------------------+------------------------------|
+| =(save-workspace name)=  | Save current workspace       |
+| =(load-workspace name)=  | Restore saved workspace      |
+| =(list-workspaces)=      | List saved workspaces        |
 
 * Advanced Usage
 
 ** Creating Custom Layers
 
-Create a new file in =layers/= directory:
+Create =~/.sbcl.d/layers/my-layer.lisp=:
 
 #+begin_src lisp
 ;;;; my-layer.lisp - Custom Layer
 
 (in-package #:cl-user)
 
-(defun my-function ()
-  "My custom function."
-  (format t "Hello from custom layer!~%"))
+;; Your custom functions
+(defun quick-test ()
+  "Run quick tests"
+  (format t "Running tests...~%")
+  ;; Your test code here
+  )
+
+;; Custom shortcuts
+(defun web ()
+  "Switch to web project"
+  (cd "~/code/web-app/")
+  (ql :my-web-app))
 
 (format t "~&; Custom layer loaded.~%")
 #+end_src
 
-Enable it in =user-config.lisp=:
+Enable in =user-config.lisp=:
 
 #+begin_src lisp
 (in-package #:sbcl-config)
-(push :my-layer *enabled-layers*)
+(pushnew :my-layer *enabled-layers*)
 #+end_src
 
-** Reloading Configuration
+** Dynamic Layer Loading
 
 #+begin_src lisp
-;; Reload entire configuration
+;; Load a layer on demand
+(sbcl-config:load-layer :my-layer)
+
+;; Reload the whole configuration
 (sbcl-config:reload-config)
 
-;; Load a specific layer
-(sbcl-config:load-layer :dev)
+;; Check what's loaded
+sbcl-config:*loaded-layers*
 #+end_src
 
-** Profiling Example
+** Integration with Emacs/SLIME
 
-#+begin_src lisp
-;; Profile a function
-(defun fibonacci (n)
-  (if (<= n 1)
-      n
-      (+ (fibonacci (- n 1))
-         (fibonacci (- n 2)))))
+Add to your =.emacs= or =init.el=:
 
-(profile-function 'fibonacci)
-(fibonacci 25)
-(profile-report)
-(unprofile-all)
+#+begin_src elisp
+;; When starting SLIME, it will use your .sbclrc
+(setq inferior-lisp-program "sbcl")
+
+;; Optional: Shortcut to reload SBCL config
+(defun slime-reload-sbcl-config ()
+  (interactive)
+  (slime-eval '(sbcl-config:reload-config)))
 #+end_src
 
-** Workspace Workflow
+** Creating Project Templates
 
 #+begin_src lisp
-;; Set up a workspace
-(cd "~/code/my-project/")
-(ql :my-project)
-(ql :prove)
-(save-workspace "myproj")
-
-;; Later, restore it
-(load-workspace "myproj")
+;; Create a custom scaffolding function
+(defun scaffold-web-api (name)
+  "Create a web API project with common dependencies"
+  (scaffold-project name :author "Your Name")
+  (let ((asd-file (format nil "~/quicklisp/local-projects/~a/~a.asd"
+                          name name)))
+    ;; Edit the .asd file to add web dependencies
+    ;; (implementation left as exercise)
+    ))
 #+end_src
 
 * Tips and Tricks
 
-** Better REPL Experience
+** Tip 1: Use History Effectively
 
 #+begin_src lisp
-;; Use history
-(history 50)  ; Show last 50 commands
+;; See recent commands
+(history 20)
 
-;; Pretty print complex structures
-(pp my-complex-list)
-(pph my-hash-table)
-
-;; Time your code
-(with-timing
-  (loop for i from 1 to 1000000 sum i))
+;; Search your history (manual, but useful pattern)
+(remove-if-not (lambda (expr)
+                 (search "defun" (format nil "~a" expr)))
+               *repl-history*)
 #+end_src
 
-** Package Exploration
+** Tip 2: Quick Testing Loop
 
 #+begin_src lisp
-;; List all packages
-(packages)
+;; Define a quick test and run it repeatedly
+(defun qt ()  ; "Quick Test"
+  (ql :my-system)
+  (test-system :my-system))
 
-;; See what a package exports
-(exports :alexandria)
-
-;; Find all functions in a package
-(functions :cl-user)
-
-;; Search for symbols
-(apropos-full "sequence")
+;; Now just: (qt)
 #+end_src
 
-** Project Development
+** Tip 3: Benchmark Alternatives
 
 #+begin_src lisp
-;; Create a new project with dependencies
-(scaffold-project "web-app" :author "Your Name")
+;; Compare two approaches
+(format t "~&Approach 1:~%")
+(benchmark (:times 10000)
+  (loop for i from 1 to 100 sum i))
 
-;; Load and work on it
-(open-project "web-app")
+(format t "~&Approach 2:~%")
+(benchmark (:times 10000)
+  (/ (* 100 101) 2))
+#+end_src
 
-;; Run tests
-(test-system :web-app)
+** Tip 4: Explore Packages Systematically
+
+#+begin_src lisp
+;; 1. Load the package
+(ql :alexandria)
+
+;; 2. See what it exports
+(defparameter *alex-exports* (exports :alexandria))
+
+;; 3. Categorize by type
+(format t "~&Functions: ~d~%"
+        (count-if #'fboundp *alex-exports*))
+(format t "Macros: ~d~%"
+        (count-if #'macro-function *alex-exports*))
+
+;; 4. Document as you go
+(dolist (sym (subseq *alex-exports* 0 10))
+  (format t "~&~a~%" sym)
+  (doc sym))
+#+end_src
+
+** Tip 5: Save Common Workspaces
+
+#+begin_src lisp
+;; Setup your common environments once
+(defun init-workspaces ()
+  ;; Web development
+  (cd "~/code/web/")
+  (ql :my-web-app)
+  (save-workspace "web")
+
+  ;; CLI tools
+  (cd "~/code/cli/")
+  (ql :my-cli-tool)
+  (save-workspace "cli")
+
+  ;; Experiments
+  (cd "~/code/experiments/")
+  (save-workspace "experiments"))
+
+;; Run once
+(init-workspaces)
+
+;; Then just switch quickly
+(load-workspace "web")
+(load-workspace "cli")
 #+end_src
 
 * Troubleshooting
@@ -404,6 +729,7 @@ Check that =~/.sbclrc= points to =~/.sbcl.d/.sbclrc=:
 
 #+begin_src sh
 ls -la ~/.sbclrc
+# Should show: .sbclrc -> /home/you/.sbcl.d/.sbclrc
 #+end_src
 
 ** Quicklisp not found
@@ -414,12 +740,124 @@ Ensure Quicklisp is installed at =~/quicklisp/=:
 ls ~/quicklisp/setup.lisp
 #+end_src
 
+If not, install Quicklisp:
+#+begin_src sh
+curl -O https://beta.quicklisp.org/quicklisp.lisp
+sbcl --load quicklisp.lisp --eval '(quicklisp-quickstart:install)'
+#+end_src
+
 ** Layer not loading
 
 Check layer exists and has no syntax errors:
 
 #+begin_src sh
 sbcl --script ~/.sbcl.d/layers/core.lisp
+#+end_src
+
+** User config not loading
+
+Make sure it's named correctly:
+#+begin_src sh
+ls ~/.sbcl.d/user-config.lisp  # NOT user-config.lisp.example
+#+end_src
+
+** Function not found
+
+Check which layers are loaded:
+#+begin_src lisp
+sbcl-config:*loaded-layers*
+#+end_src
+
+** Symbols in wrong package
+
+Remember that layer functions are in =CL-USER= by default:
+#+begin_src lisp
+;; This works:
+(help)
+
+;; This also works:
+(cl-user::help)
+
+;; But configuration functions are in SBCL-CONFIG:
+(sbcl-config:reload-config)
+#+end_src
+
+* Real-World Examples
+
+** Example 1: Building a Web Scraper
+
+#+begin_src lisp
+;; 1. Setup
+(scaffold-project "web-scraper" :author "Your Name")
+(open-project "web-scraper")
+
+;; 2. Load dependencies
+(ql '(:dexador :plump :lquery))
+
+;; 3. Write your code in the project files, then:
+(ql :web-scraper)
+
+;; 4. Test it
+(web-scraper:scrape-page "https://example.com")
+
+;; 5. If it's slow, profile it
+(profile-function 'web-scraper:scrape-page)
+(web-scraper:scrape-page "https://example.com")
+(profile-report)
+#+end_src
+
+** Example 2: Data Analysis Script
+
+#+begin_src lisp
+;; 1. Load libraries
+(ql '(:cl-csv :cl-json :vgplot))
+
+;; 2. Load and parse data
+(defparameter *data*
+  (cl-csv:read-csv #p"~/data/sales.csv"))
+
+;; 3. Analyze
+(defun average-sales ()
+  (/ (reduce #'+ (mapcar #'parse-number
+                         (mapcar #'second *data*)))
+     (length *data*)))
+
+;; 4. Time it
+(with-timing
+  (average-sales))
+
+;; 5. Profile if needed
+(profile-function 'average-sales)
+(average-sales)
+(profile-report)
+#+end_src
+
+** Example 3: API Client Development
+
+#+begin_src lisp
+;; 1. Create project
+(scaffold-project "my-api-client")
+(open-project "my-api-client")
+
+;; 2. Add dependencies to .asd file, then:
+(ql '(:dexador :jonathan :quri))
+(ql :my-api-client)
+
+;; 3. Save this workspace for later
+(save-workspace "api-dev")
+
+;; 4. During development:
+(ql :my-api-client)  ; Reload
+
+;; 5. Test individual functions
+(my-api-client:fetch-user 123)
+
+;; 6. Debug if needed
+(debug-on)
+(my-api-client:fetch-user 123)
+
+;; 7. Check what calls what
+(who-calls 'my-api-client:make-request)
 #+end_src
 
 * Contributing
@@ -433,10 +871,12 @@ Contributions are welcome! Please:
 
 ** Ideas for Contributions
 
-- Additional layers (git integration, testing frameworks, etc.)
+- Additional layers (git integration, testing frameworks, web server management)
 - More utility functions
+- Integration with other tools (Docker, databases, etc.)
 - Documentation improvements
 - Bug fixes
+- Performance improvements
 
 * License
 
